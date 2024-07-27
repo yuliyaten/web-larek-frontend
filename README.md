@@ -56,14 +56,18 @@ export interface ICard {
 }
 ```
 
-Форма пользователя
+Форма заказа
 
 ```
-export interface IUser {
- payment: string;
- address: string;
- mail: string;
- phone: string;
+export interface IOrderFormData {
+ deliveryPayment: {
+  payment: string;
+  address: string;
+ };
+ contactInfo: {
+  mail: string;
+  phone: string;
+ };
 }
 ```
 
@@ -88,16 +92,16 @@ export type TMainPage = Pick<ICard, 'name' | 'category' | 'price' | 'link'>;
 export type TCardBasket = Pick<ICard, 'name' | 'price'>;
 ```
 
-Способ оплаты и адрес доставки пользователя
+Способ оплаты и адрес доставки 
 
 ```
-export type TOrderInfo = Pick<IUser, 'payment' | 'address'>;
+export type TOrderInfo = Pick<IOrderFormData['deliveryPayment'], 'payment' | 'address'>;
 ```
 
 Данные пользователя при оформления заказа
 
 ```
-export type TUserInfo = Pick<IUser, 'mail' | 'phone'>;
+export type TUserInfo = Pick<IOrderFormData['contactInfo'], 'mail' | 'phone'>;
 ```
 
 
@@ -137,20 +141,23 @@ export type TUserInfo = Pick<IUser, 'mail' | 'phone'>;
 - addCard(card: ICard): void - добавляет карточку в массив корзины;
 - deleteCard(cardId: string, playload: Function | null): void - удаляет карточку из массива корзины;
 - getCard(cardId: string): ICard - возвращает карточку по ее id;
-- сеттеры и геттеры для сохранения и получения данных из полей класса;
+- set preview(cardId: string | null) - устанавливает id выбранной карточки для просмотра;
+- get preview(): string | null - возвращает текущее значение;
+- get cards(): ICard[] - возвращает текущий массив карточек;
 
-#### Класс UserData
-Класс отвечает за хранение данных пользователя.\
-Конструктор класса принимает инстанг брокера событий.\
+#### Класс Basket
+Класс отвечает за управление данными корзины товаров.\
 В полях класса хранятся следующие данные:
-- payment: string - способ оплаты;
-- address: string - адрес пользователя;
-- mail: string - электронная почта пользователя;
-- phone: string - номер телефона пользователя;
+- _items: ICard[] - массив карточек, добавленных в корзину;
+- _total: number - общая стоимость товаров в корзине;
 - events: IEvents - экземпляр класса `EventEmitter` для инициализации событий при изменении данных;
 
-Также класс предоставляет наборов методов для взаимодействия с этими данными.
-- setUserInfo(userData: IUser): void - сохраняет данные пользователя в классе;
+Также класс представляет набор методов для взаимодействия с этими данными.
+- addItem(card: ICard): void - добавляет карточку в корзину;
+- removeItem(cardId: string): void - удалляет карточку из корзины;
+- calculateTotal(): void - вычисляет общую сумму корзины; 
+- get items(): ICard[]- возвращает текущий массив товаров в корзине;
+- get total(): number - возвращает текущую общую стоимость корзины;
 
 ### Классы представления
 Все классы представления отвечают за отображение внутри контейнера (DOM-элемент), представляемых в них данных.
@@ -200,6 +207,18 @@ export type TUserInfo = Pick<IUser, 'mail' | 'phone'>;
 #### Класс CardsContainer
 Отвечает за отображение карточек на главной странице. Предоставляет сеттер `container` для предоставления карточек.
 
+#### Класс OrderFormData
+Отвечает за отображение формы заказа, разбитой на две части (информация о доставке и платежная информация).\
+Поля класса:
+- deliveryPayment - форма с информацией о доставке и оплате;
+- contactInfo - форма с информацией о данных пользователя;
+
+Методы:
+- getDeliveryPaymentData(): Record<string, string> - возвращает объект, содержащий данные из формы доставки и оплаты;
+- getContactData(): Record<string, string> - возвращает объект, содержащий данные пользователя;
+- setDeliveryPaymentData(data: Record<string, string>): void - сохраняет данные по доставке и оплате;
+- setContactData(data: Record<string, string>): void - сохраняет данные по пользователю;
+- render(): HTMLElement
 
 ### Слой коммуникации
 

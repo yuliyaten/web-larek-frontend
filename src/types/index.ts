@@ -7,11 +7,15 @@ export interface ICard {
  link: string;
 }
 
-export interface IUser {
- payment: string;
- address: string;
- mail: string;
- phone: string;
+export interface IOrderFormData {
+ deliveryPayment: {
+  payment: string;
+  address: string;
+ };
+ contactInfo: {
+  mail: string;
+  phone: string;
+ };
 }
 
 export interface ICardsDate {
@@ -22,14 +26,10 @@ export interface ICardsDate {
  getCard(cardId: string): ICard;
 }
 
-export interface IUserData {
- setUserInfo(userData: IUser): void;
-}
-
 export type TMainPage = Pick<ICard, 'name' | 'category' | 'price' | 'link'>;
 
 export type TCardBasket = Pick<ICard, 'name' | 'price'>;
 
-export type TOrderInfo = Pick<IUser, 'payment' | 'address'>;
+export type TOrderInfo = Pick<IOrderFormData['deliveryPayment'], 'payment' | 'address'>;
 
-export type TUserInfo = Pick<IUser, 'mail' | 'phone'>;
+export type TUserInfo = Pick<IOrderFormData['contactInfo'], 'mail' | 'phone'>;
