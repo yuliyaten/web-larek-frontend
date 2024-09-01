@@ -43,67 +43,162 @@ yarn build
 
 ## Данные и типы данных, используемые в приложении 
 
-Карточка
+Карточка товара
 
 ```
-export interface ICard {
- _id: string;
- name: string;
- about: string;
- price: string;
- category: string;
- link: string;
+export interface IProduct {
+	id: string;
+	description: string;
+	image: string;
+	title: string;
+	category: string;
+	price: number;
+	chosen: boolean;
 }
 ```
 
 Форма заказа
 
 ```
-export interface IOrderFormData {
- deliveryPayment: {
-  payment: string;
-  address: string;
- };
- contactInfo: {
-  mail: string;
-  phone: string;
- };
+export interface IOrder {
+	items: string[];
+	email: string;
+	phone: string;
+	address: string;
+	payment: string;
+	total: number;
 }
 ```
 
-Модель для хранения данных карточек
+Модель для хранения данных покупателя
 
 ```
-export interface ICardsDate {
- cards: ICard[];
- preview: string | null;
+export interface ICustomer {
+	email: string;
+	phone: string;
+	address: string;
+	payment: string;
 }
 ```
 
-Гланая страница с карточками
+Создание карточки
 
 ```
-export type TMainPage = Pick<ICard, 'name' | 'category' | 'price' | 'link'>;
-```
-
-Корзина с выбранными карточками
-
-```
-export type TCardBasket = Pick<ICard, 'name' | 'price'>;
+export type TProductInfo = Pick<IProduct,'id'|'title' | 'description' | 'image' | 'category' | 'price' | 'chosen'>;
 ```
 
 Способ оплаты и адрес доставки 
 
 ```
-export type TOrderInfo = Pick<IOrderFormData['deliveryPayment'], 'payment' | 'address'>;
+export type TOrder = Pick<IOrder, 'address' | 'payment'>;
 ```
 
 Данные пользователя при оформления заказа
 
 ```
-export type TUserInfo = Pick<IOrderFormData['contactInfo'], 'mail' | 'phone'>;
+export type TOrderContacts = Pick<ICustomer, 'email' | 'phone' | 'payment' | 'address'>;
 ```
 
+Проверка заполнения формы
+
+```
+export type FormErrors = Partial<Record<keyof ICustomer, string>>
+```
+
+Методы Api
+
+```
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
+```
+
+Запрос к серверу Api
+
+```
+export interface IApi {
+	baseUrl: string;
+	get<T>(uri: string): Promise<T>;
+	post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
+}
+```
+
+Интерфейс для отображения формы внутри модалки
+
+```
+export interface IFormState {
+	valid: boolean;
+	errors: string[];
+}
+```
+
+Интерфейс для отображения главной страницы
+
+```
+export interface IPage {
+	counter: number;
+	catalog: HTMLElement[];
+}
+```
+
+Интерфейс для управления данными приложения
+
+```
+export interface IAppData {
+	productItemList: Product[];
+	order: IOrder;
+	basket: Product[];
+	formErrors: FormErrors;
+}
+```
+
+Интерфейс для получения данных после завершения заказа
+
+```
+export interface IOrderResponse {
+	id: string;
+	total: number;
+}
+```
+
+Интерфейс для представления контента модального окна
+
+```
+export interface IModalData {
+	content: HTMLElement;
+}
+```
+
+Интерфейс для установки клика
+
+```
+export interface ICardActions {
+	onClick: (event: MouseEvent) => void;
+}
+```
+
+Интерфейс для представления модального окна заказа
+
+```
+export interface IProductList {
+	list: HTMLElement[];
+	price: number;
+}
+```
+
+Интерфейс для представления итогового заказа
+
+```
+export interface ISuccess {
+ totalPrice: number
+}
+```
+
+Интерфейс для обработчика действия при успешном завершении заказа
+
+```
+export interface ISuccessActions {
+	onClick: () => void;
+}
+```
 
 ## Архитектура приложения
 
@@ -129,96 +224,44 @@ export type TUserInfo = Pick<IOrderFormData['contactInfo'], 'mail' | 'phone'>;
 
 ### Слой данных
 
-#### Класс CardsData
-Класс отвечает за хранение и логику работы с данными карточек, представленных на странице.\
-Конструктор класса принимает инстанг брокера событий.\
-В полях класса хранятся следующие данные:
-- _cards: ICard[] - массив объектов карточек;
-- _preview: string | null - id карточки, выбранной для просмотра в модальном окне;
-- events: IEvents - экземпляр класса `EventEmitter` для инициализации событий при изменении данных;
+#### Класс model
+Содержит базовый код для создания и работы с моделями данных в приложении.
+- constructor - принимает данные и объект для обработки событий. 
+- emitChanges - метод, который используется для отправки уведомлений о том, что модель изменилась. 
 
-Также класс представляет набор методов для взаимодействия с этими данными.
-- addCard(card: ICard): void - добавляет карточку в массив корзины;
-- deleteCard(cardId: string, playload: Function | null): void - удаляет карточку из массива корзины;
-- getCard(cardId: string): ICard - возвращает карточку по ее id;
-- set preview(cardId: string | null) - устанавливает id выбранной карточки для просмотра;
-- get preview(): string | null - возвращает текущее значение;
-- get cards(): ICard[] - возвращает текущий массив карточек;
+#### Класс AppData
+Расширяет базовый класс Model и добавляет функционал для работы с продуктами и заказами.
 
-#### Класс Basket
-Класс отвечает за управление данными корзины товаров.\
-В полях класса хранятся следующие данные:
-- _items: ICard[] - массив карточек, добавленных в корзину;
-- _total: number - общая стоимость товаров в корзине;
-- events: IEvents - экземпляр класса `EventEmitter` для инициализации событий при изменении данных;
-
-Также класс представляет набор методов для взаимодействия с этими данными.
-- addItem(card: ICard): void - добавляет карточку в корзину;
-- removeItem(cardId: string): void - удалляет карточку из корзины;
-- calculateTotal(): void - вычисляет общую сумму корзины; 
-- get items(): ICard[]- возвращает текущий массив товаров в корзине;
-- get total(): number - возвращает текущую общую стоимость корзины;
+#### Класс Product
+Отображает информацию о продукте. Расширяет базовый класс Component и управляет элементами HTML, связанными с продуктом.
 
 ### Классы представления
 Все классы представления отвечают за отображение внутри контейнера (DOM-элемент), представляемых в них данных.
 
 #### Класс Modal
 Реализует модальное окно. Также предоставляет методы `open` и `close` для управления отображения модального окна. Устанавливает слушатели на клавиатуру: для закрытия модального окна по ESC, на клик по overlay, и кнопку крестик для закрытия модального онка.
-- constructor(selector: string, events: IEvents) - конструктор принимает селектор, по которому в разметке страницы будет идентифицировано модальное окно и экземпляр класса `EventEmitter` для возможности инициализации событий.
+- constructor(container: HTMLElement, events: IEvents) - конструктор принимает контейнер, по которому в разметке страницы будет идентифицировано модальное окно и экземпляр класса `EventEmitter` для возможности инициализации событий.
+
+#### Класс Component
+Абстрактный базовый класс для работы с HTML-компонентами. Он предоставляет общие методы для управления элементами.
+
+#### Класс Form
+Расширяет класс Component на основе интерфеса IFormState. Предназначен для реалиции модальных окон (оформление заказа с указанием адреса и способа оплаты, данных пользователя и успешном оформлении заказа).
+
+#### Класс OrderList
+Предназначен для реализации модального окна с информацией о заказе.
 
 Поля класса:
-- modal: HTMLElement - элемент модального окна;
-- events: IEvents - брокер событий;
+- _list - список продуктов;
+- _price - стоимость;
+- _button - кнопка заказа;
 
-#### Класс ModalForm
-Расширяет класс Modal. Предназначен для реалиции модальных окон по template id. При сабмите инициирует событие передавая в него объект с данными из полей ввода форм.
-
-Поля класса:
-- submitButton: HTMLButtonElement - Кнопка подтверждения;
-- templateId: string - id формы;
-- inputs: NodeListOf <HTMLInputElement> - коллекция всех полей ввода формы;
-
-Методы:
-- setValid(isValid: boolean): void - изменяет активность кнопки подтверждения;
-- getInputValue(): Record<string, string> - возвращает объект с данными из полей формы, где ключ - name инпута, значение - данные, введенные пользователем;
-- get form: HTMLElement - геттер для получения элемента формы;
-
-#### Класс ModalWithImage
-Расширяет класс Modal. Предназначен для реализации модального окна с изображением в большом размере. При открытии модального окна получает данные изображения, которое нужно показать.
-
-Поля класса:
-- imageElement: HTMLImageElement - элемент разметки с изображением;
-- imageCaption: HTMLElement - элемент разметки для вывода данных изображения;
-
-Методы:
-- open(data: { name: string, link: string }): void - расширение родительского метода, принимает данные изображения, которые используются для заполнения атрибутов элементов;
-- close(): void - закрытие модального окна;
-
-#### Класс Card
-Отвечает за отображение карточки, задавая в карточки даные: названия, изображения, стоиомость, описание, категорию. Класс используется для отображения карточек на стрнице сайта. В конструктор класса передается DOM элемент тимплейта, что позволяет при необходимости формироввать карточки разных вариантов верстки. В классе устанавливаются слушатели на все интерактивные элементы, в результате взаимодействия с которыми польователя генерируются соответствующие события.\
+#### Класс Product
+Отвечает за отображение карточки, задавая в карточки даные: названия, изображения, стоимость, описание, категорию. Класс используется для отображения карточек на стрнице сайта. В конструктор класса передается DOM элемент тимплейта, что позволяет при необходимости формироввать карточки разных вариантов верстки. В классе устанавливаются слушатели на все интерактивные элементы, в результате взаимодействия с которыми польователя генерируются соответствующие события.\
 Поля класса содержать элементы разметки элементов карточки. Конструктор, кроме тимплейта принимает экземлпяр `EventEmitter` для инициации событий.\
 
-Методы:
-- setData(cardData: ICard): void - заполняет атрибуты элементов карточки данными.
-- deleteCatd(): void - метод удаления карточки;
-- render(): HTMLElement - метод возвращает полностью заполненную карточку с установленными слушателями;
-- геттер id возвращает уникальный id карточки;
-
-#### Класс CardsContainer
-Отвечает за отображение карточек на главной странице. Предоставляет сеттер `container` для предоставления карточек.
-
-#### Класс OrderFormData
-Отвечает за отображение формы заказа, разбитой на две части (информация о доставке и платежная информация).\
-Поля класса:
-- deliveryPayment - форма с информацией о доставке и оплате;
-- contactInfo - форма с информацией о данных пользователя;
-
-Методы:
-- getDeliveryPaymentData(): Record<string, string> - возвращает объект, содержащий данные из формы доставки и оплаты;
-- getContactData(): Record<string, string> - возвращает объект, содержащий данные пользователя;
-- setDeliveryPaymentData(data: Record<string, string>): void - сохраняет данные по доставке и оплате;
-- setContactData(data: Record<string, string>): void - сохраняет данные по пользователю;
-- render(): HTMLElement
+#### Класс MainPage
+Отвечает за отображение главной страницы c каталогом продуктов.
 
 ### Слой коммуникации
 
@@ -233,7 +276,16 @@ export type TUserInfo = Pick<IOrderFormData['contactInfo'], 'mail' | 'phone'>;
 *Список всех событий, которые могут генерироваться в системе:*\
 
 *События, возникающие при взаимодействии пользователя с интерфейсом (генерируется классами, отвечающими за представление)*
-- `card:select` - выбор карточки для отображения модального окна
+- `order:success` - завершение заказ
+- `modal:close` - закрытие модального окна
+- `items:changed` - изменение товаров
+- `card:select` - выбор продукта
+- `card:toOrderList` - добавление продукта в заказ
+- `orderList:delete` - удаление продукта
+- `orderList:open` - открытие заказа
+- `orderFormErrors:change` - ошибка при выборе способа оплаты и адреса
+- `contactsFormErrors:change` - ошибка при заполнении email и телефона
+- `orderInput:change` - изменения в форму заказа
 - `card:delete` - выбор карточки для удаления
 - `card:submit` - сохранение выбранных карточек в корзине
 - `order:input` - внесение данных в форме заказе
