@@ -4,7 +4,7 @@ import { Api } from './components/base/api';
 import { EventEmitter } from './components/base/events';
 import { IApi, ICustomer, IOrder, IOrderResponse, IProduct } from './types';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { AppData, Product } from './components/AppData';
+import { AppData } from './components/AppData';
 import { API_URL } from './utils/constants';
 import { Page } from './components/MainPage';
 import { Modal } from './components/common/Modal';
@@ -67,7 +67,7 @@ events.on('items:changed', () => {
 	});
 });
 
-events.on('card:select', (item: Product) => {
+events.on('card:select', (item: IProduct) => {
 	page.locked = true;
 	const product = new ProductList(cloneTemplate(cardPreviewTemplate), {
 		onClick: () => {
@@ -87,7 +87,7 @@ events.on('card:select', (item: Product) => {
 	});
 });
 
-events.on('card:toOrderList', (item: Product) => {
+events.on('card:toOrderList', (item: IProduct) => {
 	if (item.chosen == true) {
 		modal.setDisabled(modal.content.querySelector('.card__button'), true);
 	}
@@ -96,8 +96,10 @@ events.on('card:toOrderList', (item: Product) => {
 	modal.close();
 });
 
-events.on('orderList:delete', (item: Product) => {
-	appModel.outOfOrderList(item.id);
+events.on('orderList:delete', (item: IProduct & { orderId: number }) => {
+	appModel.orderList = appModel.orderList.filter(
+		(orderItem) => orderItem.orderId !== item.orderId
+	);
 	item.chosen = false;
 	orderList.price = appModel.getTotalPrice();
 	page.counter = appModel.getItemsInOrderList();
@@ -155,8 +157,9 @@ events.on('orderInput:change', (data: { field: keyof ICustomer; value: string })
 );
 
 events.on('order:submit', () => {
-	appModel.order.total = appModel.getTotalPrice();
-	appModel.setItems();
+	const validOrderItems = appModel.orderList.filter(item => item.price !== null);
+	appModel.order.items = validOrderItems.map(item => item.id);
+	appModel.order.total = validOrderItems.reduce((sum, item) => sum + item.price, 0);
 	modal.render({ content: contacts.render({ valid: false, errors: [] }) });
 });
 

@@ -1,5 +1,3 @@
-import { Product } from '../components/AppData';
-
 export interface IProduct {
 	id: string;
 	description: string;
@@ -8,6 +6,7 @@ export interface IProduct {
 	category: string;
 	price: number;
 	chosen: boolean;
+	orderId: number;
 }
 
 export interface IOrder {
@@ -26,13 +25,19 @@ export interface ICustomer {
 	payment: string;
 }
 
-export type TProductInfo = Pick<IProduct,'id'|'title' | 'description' | 'image' | 'category' | 'price' | 'chosen'>;
+export type TProductInfo = Pick<
+	IProduct,
+	'id' | 'title' | 'description' | 'image' | 'category' | 'price' | 'chosen'
+>;
 
 export type TOrder = Pick<IOrder, 'address' | 'payment'>;
 
-export type TOrderContacts = Pick<ICustomer, 'email' | 'phone' | 'payment' | 'address'>;
+export type TOrderContacts = Pick<
+	ICustomer,
+	'email' | 'phone' | 'payment' | 'address'
+>;
 
-export type FormErrors = Partial<Record<keyof ICustomer, string>>
+export type FormErrors = Partial<Record<keyof ICustomer, string>>;
 
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 
@@ -53,9 +58,9 @@ export interface IPage {
 }
 
 export interface IAppData {
-	productItemList: Product[];
+	productItemList: IProduct[];
 	order: IOrder;
-	basket: Product[];
+	basket: IProduct[];
 	formErrors: FormErrors;
 }
 
@@ -78,9 +83,25 @@ export interface IProductList {
 }
 
 export interface ISuccess {
- totalPrice: number
+	totalPrice: number;
 }
 
 export interface ISuccessActions {
 	onClick: () => void;
 }
+
+export enum CategoryType {
+	OTHER = 'другое',
+	SOFT_SKILL = 'софт-скил',
+	ADDITIONAL = 'дополнительное',
+	BUTTON = 'кнопка',
+	HARD_SKILL = 'хард-скил',
+}
+
+export const category: Record<CategoryType, string> = {
+	[CategoryType.OTHER]: 'card__category_other',
+	[CategoryType.SOFT_SKILL]: 'card__category_soft',
+	[CategoryType.ADDITIONAL]: 'card__category_additional',
+	[CategoryType.BUTTON]: 'card__category_button',
+	[CategoryType.HARD_SKILL]: 'card__category_hard',
+};

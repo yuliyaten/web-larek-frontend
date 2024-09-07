@@ -1,4 +1,4 @@
-import { ICardActions, TProductInfo } from "../types";
+import { category, CategoryType, ICardActions, TProductInfo } from "../types";
 import { ensureElement } from "../utils/utils";
 import { Component } from "./base/Component";
 import { CDN_URL } from "../utils/constants";
@@ -49,8 +49,9 @@ export class ProductView extends Component<TProductInfo> {
     return this._title.textContent || '';
   }
   
-  set category(value: string) {
-    this.setText(this._category, value);
+  set category(value: CategoryType) {
+    this._category.textContent = value
+    this._category.classList.add(category[value])
   }
 
   set chosen(value: boolean) {if (!this._button.disabled) {this._button.disabled = value}}
